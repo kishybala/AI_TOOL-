@@ -1,0 +1,21 @@
+{
+  "name": "autism",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+      "build": "cd client && npm install && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sandhurajput/AUTISM_AI_Tool.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Sandhurajput/AUTISM_AI_Tool/issues"
+  },
+  "homepage": "https://github.com/Sandhurajput/AUTISM_AI_Tool#readme"
+}
