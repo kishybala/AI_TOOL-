@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 const AutismScreeningForm = () => {
   const [formData, setFormData] = useState({
-    studentName: "",
-    fatherName: "",
+    ChildName: "",
+    parentsName: "",
     age: "",
     eyeContact: "",
     speechLevel: "",
@@ -35,7 +35,8 @@ const AutismScreeningForm = () => {
     };
 
    try {
-      const response = await fetch("http://localhost:5000/api/analyze", {
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const response = await fetch(`${API_URL}/api/analyze`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,7 +124,7 @@ const AutismScreeningForm = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {[
-            { label: "Student’s Name", name: "studentName", type: "text", placeholder: "Enter student’s name" },
+            { label: "Child’s Name", name: "ChildName", type: "text", placeholder: "Enter child’s name" },
             { label: "Parents’s Name", name: "ParentsName", type: "text", placeholder: "Enter parents’s name" },
             { label: "Child’s Age", name: "age", type: "number", placeholder: "Enter age in years" },
           ].map((field, i) => (
