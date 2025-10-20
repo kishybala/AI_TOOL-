@@ -11,16 +11,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS configuration for production
-const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL || '*'] 
-    : ['http://localhost:5173', 'http://localhost:3000'],
-  credentials: true,
-  optionsSuccessStatus: 200
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(bodyParser.json());
 
 
@@ -35,7 +26,7 @@ app.post("/api/analyze", async (req, res) => {
   try {
     // Sirf kuch fields ke bajaye poora req.body lein
     const formData = req.body;
-    const { studentName, fatherName, age, eyeContact, speechLevel, socialResponse, sensoryReactions } = formData;
+    const { ChildName, parentsName, age, eyeContact, speechLevel, socialResponse, sensoryReactions } = formData;
 
     console.log("Form data received:", formData);
 
@@ -84,14 +75,17 @@ Format:
       };
     }
 
-    // Firestore me poora formData save 
-    await db.collection("aiReports").add({
-      ...formData, // Poora form data yahan save hoga (naam, pita ka naam, etc.)
-      aiResponse: parsedData,
-      createdAt: new Date(),
-    });
-
-    console.log("✅ Data saved to Firestore successfully!");
+    // Firestore me poora formData save (optional - won't crash if it fails)
+    try {
+      await db.collection("aiReports").add({
+        ...formData, // Poora form data yahan save hoga (naam, pita ka naam, etc.)
+        aiResponse: parsedData,
+        createdAt: new Date(),
+      });
+      console.log("✅ Data saved to Firestore successfully!");
+    } catch (firestoreError) {
+      console.warn("⚠️ Firestore save failed (continuing anyway):", firestoreError.message);
+    }
 
     res.json(parsedData);
 

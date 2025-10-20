@@ -77,7 +77,7 @@ const ResultsPage = () => {
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, scaledHeight);
       
-      const fileName = `AutismReport_${formData?.studentName?.replace(/\s+/g, '_') || 'Report'}.pdf`;
+      const fileName = `AutismReport_${formData?.ChildName?.replace(/\s+/g, '_') || 'Report'}.pdf`;
       pdf.save(fileName);
       
       console.log('✅ PDF downloaded successfully:', fileName);
@@ -111,8 +111,8 @@ const ResultsPage = () => {
               Child's Information
             </h2>
             <div className="grid grid-cols-2 gap-x-8 gap-y-4 mt-4" style={{ color: '#374151' }}>
-              <p><strong>Student’s Name:</strong> {formData.studentName}</p>
-              <p><strong>Father’s Name:</strong> {formData.fatherName}</p>
+              <p><strong>Student's Name:</strong> {formData.ChildName}</p>
+              <p><strong>Father's Name:</strong> {formData.ParentsName || formData.parentsName}</p>
               <p><strong>Age:</strong> {formData.age} years</p>
               <p><strong>Eye Contact:</strong> {formData.eyeContact}</p>
               <p><strong>Speech Level:</strong> {formData.speechLevel}</p>
