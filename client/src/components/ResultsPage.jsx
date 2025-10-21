@@ -51,11 +51,12 @@ const ResultsPage = () => {
 
       console.log('🔄 Starting PDF generation...');
       
-      // Wait a bit for any animations to complete
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Wait for animations and images to load
+      await new Promise(resolve => setTimeout(resolve, 500));
       
+      // Create canvas with optimized settings for single-page PDF
       const canvas = await html2canvas(input, { 
-        scale: 2,
+        scale: 1.5, // Better quality
         useCORS: true,
         allowTaint: true,
         logging: false,
@@ -63,21 +64,21 @@ const ResultsPage = () => {
         windowWidth: input.scrollWidth,
         windowHeight: input.scrollHeight,
         onclone: (clonedDoc) => {
-        
           const clonedElement = clonedDoc.querySelector('[data-pdf-content]');
           if (clonedElement) {
             clonedElement.style.color = '#000000';
+            // Professional padding
+            clonedElement.style.padding = '25px';
           }
         },
         ignoreElements: (element) => {
-      
           return element.classList && element.classList.contains('ignore-pdf');
         }
       });
       
       console.log('✅ Canvas created successfully');
       
-      const imgData = canvas.toDataURL('image/png', 1.0);
+      const imgData = canvas.toDataURL('image/jpeg', 0.95); // High quality
       const pdf = new jsPDF('p', 'mm', 'a4');
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -85,10 +86,20 @@ const ResultsPage = () => {
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       
-      const ratio = pdfWidth / imgWidth;
+      // Calculate aspect ratio to fit content on one page with proper margins
+      const ratio = Math.min(
+        (pdfWidth - 15) / imgWidth,  // 7.5mm margin on each side
+        (pdfHeight - 15) / imgHeight  // 7.5mm margin top and bottom
+      );
+      const scaledWidth = imgWidth * ratio;
       const scaledHeight = imgHeight * ratio;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, scaledHeight);
+      // Center the content on the page
+      const xOffset = (pdfWidth - scaledWidth) / 2;
+      const yOffset = (pdfHeight - scaledHeight) / 2;
+      
+      // Add image to PDF, scaled to fit one page
+      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, scaledWidth, scaledHeight);
       
       const fileName = `AutismReport_${formData?.ChildName?.replace(/\s+/g, '_') || 'Report'}.pdf`;
       pdf.save(fileName);
@@ -108,72 +119,63 @@ const ResultsPage = () => {
         <motion.div
           ref={pdfRef}
           data-pdf-content
-          className="bg-white rounded-2xl shadow-lg p-8 md:p-12 border"
+          className="bg-white rounded-2xl shadow-lg p-8 border"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           style={{ backgroundColor: '#ffffff', color: '#1f2937' }}
         >
-          <h1 className="text-3xl font-bold text-center" style={{ color: '#1f2937' }}>Child Assessment Report</h1>
-          <p className="text-center mt-2" style={{ color: '#6b7280' }}>Generated on: {new Date().toLocaleDateString()}</p>
-          <div className="h-1 w-40 mx-auto mt-4 rounded-full" style={{ backgroundColor: '#3b82f6' }} />
+          <h1 className="text-2xl font-bold text-center mb-1" style={{ color: '#1f2937', letterSpacing: '0.5px' }}>
+            Child Assessment Report
+          </h1>
+          <p className="text-center text-sm" style={{ color: '#6b7280' }}>
+            Generated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+          <div className="h-1 w-32 mx-auto mt-3 rounded-full" style={{ backgroundColor: '#3b82f6' }} />
 
           {/* Child's Details */}
-          <div className="mt-10">
-            <h2 className="text-xl font-semibold pb-2" style={{ color: '#1d4ed8', borderBottom: '2px solid #bfdbfe' }}>
+          <div className="mt-6">
+            <h2 className="text-lg font-bold pb-2 mb-3" style={{ color: '#1d4ed8', borderBottom: '2px solid #3b82f6' }}>
               Child's Information
             </h2>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-4 mt-4" style={{ color: '#374151' }}>
-              <p><strong>Student's Name:</strong> {formData.ChildName}</p>
-              <p><strong>Father's Name:</strong> {formData.ParentsName || formData.parentsName}</p>
-              <p><strong>Age:</strong> {formData.age} years</p>
-              <p><strong>Eye Contact:</strong> {formData.eyeContact}</p>
-              <p><strong>Speech Level:</strong> {formData.speechLevel}</p>
-              <p><strong>Social Response:</strong> {formData.socialResponse}</p>
-              <p><strong>Sensory Reactions:</strong> {formData.sensoryReactions}</p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm" style={{ color: '#374151' }}>
+              <p><strong className="font-semibold" style={{ color: '#1f2937' }}>Student Name:</strong> {formData.ChildName}</p>
+              <p><strong className="font-semibold" style={{ color: '#1f2937' }}>Father Name:</strong> {formData.ParentsName || formData.parentsName}</p>
+              <p><strong className="font-semibold" style={{ color: '#1f2937' }}>Age:</strong> {formData.age} years</p>
+              <p><strong className="font-semibold" style={{ color: '#1f2937' }}>Eye Contact:</strong> {formData.eyeContact}</p>
+              <p><strong className="font-semibold" style={{ color: '#1f2937' }}>Speech Level:</strong> {formData.speechLevel}</p>
+              <p><strong className="font-semibold" style={{ color: '#1f2937' }}>Social Response:</strong> {formData.socialResponse}</p>
+              <p className="col-span-2"><strong className="font-semibold" style={{ color: '#1f2937' }}>Sensory Reactions:</strong> {formData.sensoryReactions}</p>
             </div>
           </div>
 
           {/* Emotion Detection Results */}
           {emotionData && (
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold pb-2" style={{ color: '#9333ea', borderBottom: '2px solid #e9d5ff' }}>
+            <div className="mt-6">
+              <h2 className="text-lg font-bold pb-2 mb-3" style={{ color: '#9333ea', borderBottom: '2px solid #a855f7' }}>
                 Facial Emotion Analysis
               </h2>
-              <div className="mt-4 grid grid-cols-2 gap-6" style={{ color: '#374151' }}>
-                {/* Photo */}
-                {emotionData.imagePreview && (
-                  <div>
-                    <p className="font-semibold mb-2">Child's Photo:</p>
-                    <img
-                      src={emotionData.imagePreview}
-                      alt="Child's photo"
-                      className="w-full h-48 object-cover rounded-lg border-2"
-                      style={{ borderColor: '#e9d5ff' }}
-                    />
-                  </div>
-                )}
-                
-                {/* Emotion Details */}
-                <div>
-                  <p className="font-semibold mb-2">Dominant Emotion:</p>
-                  <div className="p-4 rounded-lg" style={{ backgroundColor: '#faf5ff', border: '1px solid #e9d5ff' }}>
-                    <p className="text-2xl font-bold capitalize" style={{ color: '#9333ea' }}>
+              <div className="text-sm" style={{ color: '#374151' }}>
+                {/* Emotion Details - No Photo */}
+                <div className="max-w-md">
+                  <p className="font-semibold mb-2 text-base" style={{ color: '#1f2937' }}>Dominant Emotion:</p>
+                  <div className="p-4 rounded-lg mb-4" style={{ backgroundColor: '#faf5ff', border: '2px solid #e9d5ff' }}>
+                    <p className="text-xl font-bold capitalize mb-1" style={{ color: '#9333ea' }}>
                       {getEmotionEmoji(emotionData.dominantEmotion)} {emotionData.dominantEmotion}
                     </p>
-                    <p className="text-sm mt-2" style={{ color: '#6b7280' }}>
-                      Confidence: {emotionData.confidence}%
+                    <p className="text-sm" style={{ color: '#6b7280' }}>
+                      Confidence: <strong>{emotionData.confidence}%</strong>
                     </p>
                   </div>
                   
                   {emotionData.allEmotions && (
-                    <div className="mt-4">
-                      <p className="font-semibold mb-2 text-sm">All Detected Emotions:</p>
-                      <div className="space-y-1 text-sm">
+                    <div>
+                      <p className="font-semibold mb-2 text-base" style={{ color: '#1f2937' }}>All Detected Emotions:</p>
+                      <div className="space-y-2 text-sm">
                         {emotionData.allEmotions.slice(0, 4).map(({ emotion, confidence }) => (
-                          <div key={emotion} className="flex justify-between">
-                            <span className="capitalize">{getEmotionEmoji(emotion)} {emotion}</span>
-                            <span>{confidence}%</span>
+                          <div key={emotion} className="flex justify-between items-center py-1 px-3 rounded" style={{ backgroundColor: '#f3f4f6' }}>
+                            <span className="capitalize font-medium">{getEmotionEmoji(emotion)} {emotion}</span>
+                            <span className="font-semibold" style={{ color: '#9333ea' }}>{confidence}%</span>
                           </div>
                         ))}
                       </div>
@@ -185,27 +187,36 @@ const ResultsPage = () => {
           )}
 
           {/* Therapy Goals */}
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold pb-2" style={{ color: '#7c3aed', borderBottom: '2px solid #ddd6fe' }}>
+          <div className="mt-6">
+            <h2 className="text-lg font-bold pb-2 mb-3" style={{ color: '#7c3aed', borderBottom: '2px solid #a78bfa' }}>
               Therapy Goals
             </h2>
-            <ul className="list-decimal list-inside mt-4 space-y-2" style={{ color: '#374151' }}>
+            <ul className="list-none space-y-2.5 text-sm" style={{ color: '#374151' }}>
               {therapyGoals.map((goal, index) => (
-                <li key={index}>{goal}</li>
+                <li key={index} className="flex items-start leading-relaxed">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-white font-bold mr-3 flex-shrink-0" style={{ backgroundColor: '#7c3aed', fontSize: '12px' }}>
+                    {index + 1}
+                  </span>
+                  <span>{goal}</span>
+                </li>
               ))}
             </ul>
           </div>
 
           {/* Recommended Activities */}
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold pb-2" style={{ color: '#0f766e', borderBottom: '2px solid #99f6e4' }}>
+          <div className="mt-6">
+            <h2 className="text-lg font-bold pb-2 mb-3" style={{ color: '#0f766e', borderBottom: '2px solid #14b8a6' }}>
               Recommended Activities
             </h2>
-            <div className="mt-4 space-y-4">
+            <div className="space-y-3">
               {recommendedActivities.map((activity, index) => (
-                <div key={index} className="p-4 rounded-lg border" style={{ backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }}>
-                  <h3 className="font-semibold" style={{ color: '#1f2937' }}>{activity.title}</h3>
-                  <p className="mt-1" style={{ color: '#4b5563' }}>{activity.description}</p>
+                <div key={index} className="p-4 rounded-lg border-l-4" style={{ backgroundColor: '#f0fdfa', borderColor: '#14b8a6' }}>
+                  <h3 className="font-bold text-sm mb-1.5" style={{ color: '#0f766e' }}>
+                    {index + 1}. {activity.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed" style={{ color: '#374151' }}>
+                    {activity.description}
+                  </p>
                 </div>
               ))}
             </div>
