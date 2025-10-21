@@ -7,12 +7,25 @@ import html2canvas from 'html2canvas';
 const ResultsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { aiResult, formData } = location.state || {};
+  const { aiResult, formData, emotionData } = location.state || {};
   const pdfRef = useRef();
 
 
   const therapyGoals = aiResult?.therapy_goals || [];
   const recommendedActivities = aiResult?.activities || [];
+
+  const getEmotionEmoji = (emotion) => {
+    const emojiMap = {
+      happy: "😊",
+      sad: "😢",
+      angry: "😠",
+      fearful: "😨",
+      disgusted: "🤢",
+      surprised: "😲",
+      neutral: "😐",
+    };
+    return emojiMap[emotion] || "😊";
+  };
 
   if (!formData || !aiResult) {
     return (
@@ -120,6 +133,56 @@ const ResultsPage = () => {
               <p><strong>Sensory Reactions:</strong> {formData.sensoryReactions}</p>
             </div>
           </div>
+
+          {/* Emotion Detection Results */}
+          {emotionData && (
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold pb-2" style={{ color: '#9333ea', borderBottom: '2px solid #e9d5ff' }}>
+                Facial Emotion Analysis
+              </h2>
+              <div className="mt-4 grid grid-cols-2 gap-6" style={{ color: '#374151' }}>
+                {/* Photo */}
+                {emotionData.imagePreview && (
+                  <div>
+                    <p className="font-semibold mb-2">Child's Photo:</p>
+                    <img
+                      src={emotionData.imagePreview}
+                      alt="Child's photo"
+                      className="w-full h-48 object-cover rounded-lg border-2"
+                      style={{ borderColor: '#e9d5ff' }}
+                    />
+                  </div>
+                )}
+                
+                {/* Emotion Details */}
+                <div>
+                  <p className="font-semibold mb-2">Dominant Emotion:</p>
+                  <div className="p-4 rounded-lg" style={{ backgroundColor: '#faf5ff', border: '1px solid #e9d5ff' }}>
+                    <p className="text-2xl font-bold capitalize" style={{ color: '#9333ea' }}>
+                      {getEmotionEmoji(emotionData.dominantEmotion)} {emotionData.dominantEmotion}
+                    </p>
+                    <p className="text-sm mt-2" style={{ color: '#6b7280' }}>
+                      Confidence: {emotionData.confidence}%
+                    </p>
+                  </div>
+                  
+                  {emotionData.allEmotions && (
+                    <div className="mt-4">
+                      <p className="font-semibold mb-2 text-sm">All Detected Emotions:</p>
+                      <div className="space-y-1 text-sm">
+                        {emotionData.allEmotions.slice(0, 4).map(({ emotion, confidence }) => (
+                          <div key={emotion} className="flex justify-between">
+                            <span className="capitalize">{getEmotionEmoji(emotion)} {emotion}</span>
+                            <span>{confidence}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Therapy Goals */}
           <div className="mt-8">

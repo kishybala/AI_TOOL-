@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import childImg from "../assets/child2.png";
 import child2Img from "../assets/child3.png";
+import EmotionDetection from "./EmotionDetection";
 
 const AutismScreeningForm = () => {
   const [formData, setFormData] = useState({
@@ -15,12 +16,17 @@ const AutismScreeningForm = () => {
     sensoryReactions: "",
   });
 
+  const [emotionData, setEmotionData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleEmotionDetected = (data) => {
+    setEmotionData(data);
   };
 
   const handleSubmit = async (e) => {
@@ -31,6 +37,7 @@ const AutismScreeningForm = () => {
     const dataToSend = {
       ...formData,
       sensoryReactions: [formData.sensoryReactions],
+      emotionData: emotionData, // Include emotion data
     };
 
     try {
@@ -43,7 +50,7 @@ const AutismScreeningForm = () => {
       if (!response.ok) throw new Error("Network response was not ok");
 
       const aiResult = await response.json();
-      navigate("/results", { state: { aiResult, formData } });
+      navigate("/results", { state: { aiResult, formData, emotionData } });
     } catch (err) {
       console.error("Fetch error:", err);
       setError("Failed to get AI analysis. Please try again.");
@@ -58,7 +65,7 @@ const AutismScreeningForm = () => {
       <img
         src={childImg}
         alt="Decorative top-right"
- className="absolute top-0 right-0 w-1/3 max-w-md opacity-90 object-contain z-20"      />
+ className="hidden sm:block absolute top-0 right-0 w-1/3 max-w-md opacity-90 object-contain z-20"      />
       <img
         src={child2Img}
         alt="Decorative bottom-left"
@@ -153,6 +160,15 @@ const AutismScreeningForm = () => {
               </select>
             </motion.div>
           ))}
+
+          {/* Emotion Detection Component */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <EmotionDetection onEmotionDetected={handleEmotionDetected} />
+          </motion.div>
 
           <motion.button
             type="submit"
